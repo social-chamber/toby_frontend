@@ -3,6 +3,7 @@ import { ImageItem, VideoPlayer } from "./SocialChamberRoom"
 const SocialChamberLayout = () => {
   // Use static local assets instead of backend content
   const images = [
+    // CMS-driven gallery to be plugged later; keep local fallbacks
     { url: "/img/all/room_1748604997730.jpeg", type: "image" },
     { url: "/img/all/room_1750752704079.jpeg", type: "image" },
     { url: "/img/all/room_1750752839337.webp", type: "image" },

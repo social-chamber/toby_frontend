@@ -69,16 +69,16 @@ export default function ServiceSelection() {
       </div>
     );
   } else {
-    let filtered = (data?.data || []).filter(
+    let filtered = Array.isArray(data?.data) ? data.data.filter(
       (s: Service) => s.name !== "Late Night Special"
-    );
+    ) : [];
     if (selectedCategoryName === "Hourly") {
       filtered = filtered.slice(0, 6);
     }
     content = (
       <div className="grid md:grid-cols-2 gap-6">
-        {filtered.map((service: Service) => (
-          <ServiceCard key={service._id} service={service} />
+        {filtered.map((service: Service, index) => (
+          <ServiceCard key={service._id?.toString() || service.name || index} service={service} />
         ))}
       </div>
     );

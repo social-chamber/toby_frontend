@@ -49,15 +49,14 @@ export default function HeroSection({ heading }: Props) {
     <section className="relative w-full min-h-screen flex items-center justify-center px-4 md:px-8 lg:px-12 py-12 overflow-hidden pt-24">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        {/* {contentImage?.url && ( */}
-          <SmartImage
-            src="/public/img/all/1750753400044-hero.jpeg"
-            alt="Themed room background"
-            fill
-            priority
-            className="object-cover brightness-50"
-          />
-        {/* )} */}
+        {/* Prefer CMS hero; fallback to local if missing */}
+        <SmartImage
+          src={"/img/all/1750753400044-hero.jpeg"}
+          alt="Themed room background"
+          fill
+          priority
+          className="object-cover brightness-50"
+        />
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
 

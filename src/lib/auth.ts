@@ -40,12 +40,12 @@ export const authOptions: NextAuthOptions = {
           );
 
           const response = await res.json();
- // console.log("response", response);
+          // console.log("response", response);
           if (!res.ok || !response?.status) {
             throw new Error(response?.message || "Login failed");
           }
-        if  (response.data.user.role ===  "USER") {
-           // console.log("xxx")
+          if (response.data.user.role === "USER") {
+            // console.log("xxx")
             throw new Error("Only admin can access this page");
           }
           const { user, accessToken } = response.data;
@@ -59,7 +59,10 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("Authentication error:", error);
-          const errorMessage = error instanceof Error ? error.message : "Authentication failed. Please try again.";
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Authentication failed. Please try again.";
           throw new Error(errorMessage);
         }
       },
@@ -89,6 +92,20 @@ export const authOptions: NextAuthOptions = {
         accessToken: token.accessToken,
       };
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Always send authenticated admins to dashboard
+      if (url.startsWith("/dashboard")) return `${baseUrl}${url}`;
+      // If coming from login or root, go to dashboard
+      try {
+        const target = new URL(url, baseUrl);
+        if (["/", "/login"].includes(target.pathname)) {
+          return `${baseUrl}/dashboard`;
+        }
+      } catch {
+        // ignore parse errors and fall through
+      }
+      return url.startsWith("/") ? `${baseUrl}${url}` : url;
     },
   },
 };

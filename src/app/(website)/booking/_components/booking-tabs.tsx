@@ -104,7 +104,6 @@ export function BookingTabs() {
         <RoomSelection />
       </TabsContent>
       <TabsContent value="services">
-        <p className="text-center md:text-xl text-base font-medium text-gray-700">You can book any day - any time 24/7h </p>
         <ServiceSelection />
       </TabsContent>
       <TabsContent value="time">
