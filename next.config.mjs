@@ -22,8 +22,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    // Enable Next.js image optimization
+    // Enable Next.js image optimization with performance improvements
     formats: ["image/avif", "image/webp"],
+    
+    // Add size limits to prevent huge images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    
+    // Add aggressive caching
+    minimumCacheTTL: 31536000, // 1 year cache
+    
     domains: [
       "www.drupal.org",
       "encrypted-tbn0.gstatic.com",
@@ -73,6 +81,18 @@ const nextConfig = {
       },
       {
         source: "/images/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/_next/image/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/img/:path*",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
