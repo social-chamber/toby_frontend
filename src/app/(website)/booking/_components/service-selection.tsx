@@ -95,7 +95,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
   const { setService, selectedCategoryName } = useBookingStore();
 
   const serviceData = service;
-  const displayPrice = getDisplayPricePerSlot(serviceData?.pricePerSlot ?? 0); // Use consistent pricing utility
+  const displayPrice = getDisplayPricePerSlot(serviceData?.pricePerSlot ?? 0); // Includes $1 platform fee
 
   const toMins = (t: string) => {
     const [h, m] = t.split(":").map(Number);

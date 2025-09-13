@@ -13,13 +13,14 @@ export interface PricingCalculation {
 /**
  * Calculate booking price using consistent logic
  * This matches the backend calculation: (service.pricePerSlot + 1) * slots * people
+ * The $1 platform fee is included in the total price
  */
 export const calculateBookingPrice = (
   servicePricePerSlot: number,
   numberOfSlots: number,
   numberOfPeople: number
 ): PricingCalculation => {
-  const adjustedPricePerSlot = servicePricePerSlot + 1; // Add $1 to match frontend display
+  const adjustedPricePerSlot = servicePricePerSlot + 1; // Add $1 platform fee
   const totalPrice = adjustedPricePerSlot * numberOfSlots * numberOfPeople;
   
   return {
@@ -39,10 +40,10 @@ export const formatPrice = (price: number): string => {
 };
 
 /**
- * Calculate price per slot for display (includes the +$1 adjustment)
+ * Calculate price per slot for display (includes the $1 platform fee)
  */
 export const getDisplayPricePerSlot = (servicePricePerSlot: number): number => {
-  return servicePricePerSlot + 1;
+  return servicePricePerSlot + 1; // $1 platform fee included
 };
 
 /**
@@ -113,7 +114,7 @@ export const getPricingBreakdown = (
  * Constants for pricing
  */
 export const PRICING_CONSTANTS = {
-  PLATFORM_FEE_PER_SLOT: 1, // $1 per slot platform fee
+  PLATFORM_FEE_PER_SLOT: 1, // $1 per slot platform fee (included in all prices)
   CURRENCY: 'SGD',
   CURRENCY_SYMBOL: '$'
 } as const;
