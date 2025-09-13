@@ -6,6 +6,7 @@ import { useBookingStore } from "@/store/booking/index";
 import type { Service, ServiceResponse } from "@/types/service";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Users } from "lucide-react";
+import { getDisplayPricePerSlot, formatPrice } from "@/lib/pricingUtils";
 
 // This file provides mock data for development and testing
 
@@ -94,7 +95,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
   const { setService, selectedCategoryName } = useBookingStore();
 
   const serviceData = service;
-  const displayPrice = (serviceData?.pricePerSlot ?? 0) + 1; // global +$1 adjustment
+  const displayPrice = getDisplayPricePerSlot(serviceData?.pricePerSlot ?? 0); // Use consistent pricing utility
 
   const toMins = (t: string) => {
     const [h, m] = t.split(":").map(Number);
@@ -138,7 +139,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-lg font-semibold">{buildDisplayTitle()}</h3>
           <div className="bg-yellow-400 text-xs font-bold px-2 py-1 rounded">
-            ${displayPrice}
+            {formatPrice(displayPrice)}
           </div>
         </div>
 

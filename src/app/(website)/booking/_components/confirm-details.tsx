@@ -21,6 +21,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useSession } from "next-auth/react";
+import { calculateBookingPrice, formatPrice } from "@/lib/pricingUtils";
 
 const bookingSchema = z.object({
   firstName: z.string().min(1, "Required"),
@@ -194,12 +195,14 @@ export default function ConfirmDetails() {
     },
   });
 
-  // for pirce update show
+  // for price update show - use consistent pricing calculation
   const numberOfPeople = form.watch("numberOfPeople"); // live watch
-  const totalPrice =
-    ((service?.pricePerSlot ?? 0) + 1) *
-    numberOfPeople *
-    (selectedTimeSlot?.length ?? 0);
+  const pricingCalculation = calculateBookingPrice(
+    service?.pricePerSlot ?? 0,
+    selectedTimeSlot?.length ?? 0,
+    numberOfPeople
+  );
+  const totalPrice = pricingCalculation.totalPrice;
 
   const roomId = room?._id;
   const mockData = {
@@ -532,9 +535,31 @@ export default function ConfirmDetails() {
           <div className="border-t pt-4 mt-6 flex justify-between items-center">
             <span className="font-medium">Total for booking:</span>
             <span className="text-xl font-bold">
-              {/* ${mockData.service.price.toFixed(2)} */}$
-              {totalPrice.toFixed(2)}
+              {formatPrice(totalPrice)}
             </span>
+          </div>
+          
+          {/* Pricing breakdown for transparency */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm">
+            <div className="text-gray-600 mb-2">Price breakdown:</div>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span>Base price per slot:</span>
+                <span>{formatPrice(pricingCalculation.servicePrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Platform fee per slot:</span>
+                <span>{formatPrice(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total per slot:</span>
+                <span>{formatPrice(pricingCalculation.adjustedPricePerSlot)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Slots × People:</span>
+                <span>{pricingCalculation.numberOfSlots} × {pricingCalculation.numberOfPeople}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
