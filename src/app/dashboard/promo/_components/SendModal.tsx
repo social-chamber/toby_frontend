@@ -18,23 +18,31 @@ interface SendPromoCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
   promoCode: string;
+  promoCodeId: string;
 }
 
 export default function SendModal({
   isOpen,
   onClose,
   promoCode,
+  promoCodeId,
 }: SendPromoCodeModalProps) {
   // const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("Space Room");
   const [body, setBody] = useState("Text");
-  const token = localStorage.getItem("token");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const handleSend = async () => {
-    // if (!email || !subject || !body) {
-    //   toast.error("All fields are required.");
-    //   return;
-    // }
+    if (!subject || !body) {
+      toast.error("Subject and body are required.");
+      return;
+    }
+
+    if (!token) {
+      toast.error("Authentication token not found. Please log in again.");
+      return;
+    }
 
     try {
       toast.loading("Sending promo code...", { id: "sendToast" });
@@ -47,19 +55,31 @@ export default function SendModal({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({  subject, body, promoCode }),
+          body: JSON.stringify({ subject, body, promoCodeId }),
         }
       );
 
-      if (!res.ok) throw new Error("Failed to send email");
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Unauthorized. Please log in again.");
+        } else if (res.status === 403) {
+          throw new Error("Access denied. Admin privileges required.");
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to send email");
+        }
+      }
 
+      // The result is not used, so we simply await it to avoid the lint error.
+      await res.json();
       toast.success("Promo code sent successfully!", { id: "sendToast" });
       onClose();
     } catch (error) {
       toast.error(
         `Failed to send email${
           error instanceof Error ? `: ${error.message}` : ""
-        }`
+        }`,
+        { id: "sendToast" }
       );
     }
   };
@@ -85,50 +105,51 @@ export default function SendModal({
         </DialogHeader>
 
         <div className="p-6 space-y-5">
-  {/* Promo Code */}
-  <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-    <Label className="text-sm font-medium text-black">Promo Code:</Label>
-    <Input
-      readOnly
-      value={promoCode}
-      className="bg-gray-50 border-gray-200 w-full"
-      placeholder="#####"
-    />
-  </div>
+          {/* Promo Code */}
+          <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+            <Label className="text-sm font-medium text-black">
+              Promo Code:
+            </Label>
+            <Input
+              readOnly
+              value={promoCode}
+              className="bg-gray-50 border-gray-200 w-full"
+              placeholder="#####"
+            />
+          </div>
 
-  {/* Email */}
-  {/* <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-    <Label className="text-sm font-medium text-black">Email:</Label>
-    <Input
-      type="email"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      placeholder="example@mail.com"
-      className="bg-gray-50 border-gray-200 w-full"
-    />
-  </div> */}
+          {/* Email */}
+          {/* <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+            <Label className="text-sm font-medium text-black">Email:</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@mail.com"
+              className="bg-gray-50 border-gray-200 w-full"
+            />
+          </div> */}
 
-  {/* Subject */}
-  <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-    <Label className="text-sm font-medium text-black">Subject:</Label>
-    <Input
-      value={subject}
-      onChange={(e) => setSubject(e.target.value)}
-      className="bg-gray-50 border-gray-200 w-full"
-    />
-  </div>
+          {/* Subject */}
+          <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+            <Label className="text-sm font-medium text-black">Subject:</Label>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="bg-gray-50 border-gray-200 w-full"
+            />
+          </div>
 
-  {/* Body */}
-  <div className="grid grid-cols-[100px_1fr] gap-4">
-    <Label className="text-sm font-medium text-black pt-2">Body:</Label>
-    <Textarea
-      value={body}
-      onChange={(e) => setBody(e.target.value)}
-      className="bg-gray-50 border-gray-200 min-h-[180px] resize-none w-full"
-    />
-  </div>
-</div>
-
+          {/* Body */}
+          <div className="grid grid-cols-[100px_1fr] gap-4">
+            <Label className="text-sm font-medium text-black pt-2">Body:</Label>
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="bg-gray-50 border-gray-200 min-h-[180px] resize-none w-full"
+            />
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 p-4 mt-2">

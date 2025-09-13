@@ -23,7 +23,7 @@ import { useSession } from "next-auth/react";
 const PromoPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
-  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [selectedCode, setSelectedCode] = useState<{id: string, code: string} | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,7 +101,7 @@ const PromoPage = () => {
   const currentPromoCodes = promoData.slice(currentItemStart - 1, currentItemEnd);
 
   const handleSendCode = (id: string, code: string) => {
-    setSelectedCode(code);
+    setSelectedCode({id, code});
     setIsSendModalOpen(true);
   };
 
@@ -233,7 +233,12 @@ const PromoPage = () => {
         <CreateModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
       )}
       {isSendModalOpen && selectedCode && (
-        <SendModal isOpen={isSendModalOpen} onClose={() => setIsSendModalOpen(false)} promoCode={selectedCode} />
+        <SendModal 
+          isOpen={isSendModalOpen} 
+          onClose={() => setIsSendModalOpen(false)} 
+          promoCode={selectedCode.code}
+          promoCodeId={selectedCode.id}
+        />
       )}
     </div>
   );
