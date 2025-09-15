@@ -127,10 +127,6 @@ export function PromoUsagePage() {
 
       console.log('🔍 Debug: Token from session:', token ? 'Token exists' : 'No token found');
       console.log('🔍 Debug: Session status:', session.status);
-      
-      if (!token) {
-        throw new Error("No authentication token found. Please log in to access this page.");
-      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/admin/promo-usage/summary?period=${filters.period}`,
@@ -161,7 +157,7 @@ export function PromoUsagePage() {
     } finally {
       setLoading(false);
     }
-  }, [filters.period]);
+  }, [filters.period, token, session.status]);
 
   // Fetch usage details
   const fetchUsageData = useCallback(async () => {
@@ -171,10 +167,6 @@ export function PromoUsagePage() {
 
       console.log('🔍 Debug: Token from session:', token ? 'Token exists' : 'No token found');
       console.log('🔍 Debug: Session status:', session.status);
-      
-      if (!token) {
-        throw new Error("No authentication token found. Please log in to access this page.");
-      }
 
       const params = new URLSearchParams({
         page: filters.page.toString(),
@@ -219,11 +211,15 @@ export function PromoUsagePage() {
     filters.startDate,
     filters.endDate,
     filters.promoCode,
+    token,
+    session.status,
   ]);
 
   useEffect(() => {
     // Only make API calls when session is loaded and user is authenticated
     if (session.status === 'loading') {
+      setLoading(true);
+      setError(null);
       return; // Still loading
     }
     
@@ -233,12 +229,19 @@ export function PromoUsagePage() {
       return;
     }
     
+    // Only proceed if we have a valid token
+    if (!token) {
+      setError('No authentication token found. Please log out and log back in to refresh your authentication token.');
+      setLoading(false);
+      return;
+    }
+    
     if (activeTab === "overview") {
       fetchSummaryData();
     } else {
       fetchUsageData();
     }
-  }, [activeTab, fetchSummaryData, fetchUsageData, session.status]);
+  }, [activeTab, session.status, token, fetchSummaryData, fetchUsageData]);
 
   const handleExport = async () => {
     try {
