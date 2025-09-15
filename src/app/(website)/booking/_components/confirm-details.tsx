@@ -68,10 +68,13 @@ export default function ConfirmDetails() {
           return;
         }
 
-        // handle success
-        // console.log("Payment Intent Success:", data.data);
+        // Store booking ID in sessionStorage for success page
+        if (data.data.bookingId) {
+          sessionStorage.setItem('pendingBookingId', data.data.bookingId);
+        }
 
-        window.location.href = data.data.url;
+        // Redirect to payment status page first, then to Stripe
+        window.location.href = `/payment-status?redirect=${encodeURIComponent(data.data.url)}`;
       },
     });
 

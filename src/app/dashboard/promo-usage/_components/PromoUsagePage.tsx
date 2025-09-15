@@ -54,6 +54,10 @@ interface PromoUsageData {
     timeSlots: Array<{ start: string; end: string }>;
     total: number;
     createdAt: string;
+    // Email tracking information
+    promoCodeEmailStatus: string;
+    promoCodeEmailSentAt: string | null;
+    promoCodeEmailMessageId: string | null;
   }>;
   totalCount: number;
   totalSavings: string;
@@ -284,6 +288,18 @@ export function PromoUsagePage() {
     timeSlots: Array<{ start: string; end: string }>
   ) => {
     return timeSlots.map((slot) => `${slot.start} - ${slot.end}`).join(", ");
+  };
+
+  const getEmailStatusBadge = (status: string) => {
+    switch (status) {
+      case 'sent':
+        return { variant: 'default' as const, text: '✅ Sent', color: 'text-green-600' };
+      case 'failed':
+        return { variant: 'destructive' as const, text: '❌ Failed', color: 'text-red-600' };
+      case 'not_sent':
+      default:
+        return { variant: 'secondary' as const, text: '⏳ Not Sent', color: 'text-gray-600' };
+    }
   };
 
   if (loading || session.status === 'loading') {
@@ -661,6 +677,7 @@ export function PromoUsagePage() {
                       <TableHead>Date</TableHead>
                       <TableHead>Time</TableHead>
                       <TableHead>Total</TableHead>
+                      <TableHead>Email Status</TableHead>
                       <TableHead>Created</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -701,6 +718,23 @@ export function PromoUsagePage() {
                         </TableCell>
                         <TableCell className="font-medium">
                           {formatCurrency(booking.total)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col items-start">
+                            <Badge variant={getEmailStatusBadge(booking.promoCodeEmailStatus).variant}>
+                              {getEmailStatusBadge(booking.promoCodeEmailStatus).text}
+                            </Badge>
+                            {booking.promoCodeEmailSentAt && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Sent: {formatDate(booking.promoCodeEmailSentAt)}
+                              </div>
+                            )}
+                            {booking.promoCodeEmailMessageId && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                ID: {booking.promoCodeEmailMessageId.slice(0, 8)}...
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm">
                           {formatDate(booking.createdAt)}

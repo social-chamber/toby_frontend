@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBookingStore } from "@/store/booking";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import CategorySelection from "./category-selection";
 import ConfirmDetails from "./confirm-details";
 import RoomSelection from "./room-selection";
@@ -17,6 +18,21 @@ export function BookingTabs() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Check if user is returning from payment page
+  useEffect(() => {
+    if (mounted) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromPayment = urlParams.get('from');
+      
+      if (fromPayment === 'payment') {
+        // User came back from payment page, show appropriate message
+        toast.info("Payment was not completed. Please try again or contact support if you need assistance.");
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [mounted]);
 
   if (!mounted) {
     return null;
