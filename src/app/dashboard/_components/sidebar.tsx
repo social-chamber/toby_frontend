@@ -9,6 +9,7 @@ import {
   Info,
   LogOut,
   NotebookPen,
+  BarChart3,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
@@ -66,6 +67,11 @@ export function DashboardSidebar() {
       name: "Promo",
       href: "/dashboard/promo",
       icon: FileText,
+    },
+    {
+      name: "Promo Usage",
+      href: "/dashboard/promo-usage",
+      icon: BarChart3,
     },
   ];
 
