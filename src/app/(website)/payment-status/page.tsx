@@ -11,6 +11,7 @@ export default function PaymentStatusPage() {
   const [status, setStatus] = useState<'loading' | 'pending' | 'success' | 'failed'>('loading');
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [stripeUrl, setStripeUrl] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(2);
 
   useEffect(() => {
     // Get booking ID from sessionStorage
@@ -18,18 +19,35 @@ export default function PaymentStatusPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectUrl = urlParams.get('redirect');
     
+    // Always set booking ID if available
     if (storedBookingId) {
       setBookingId(storedBookingId);
+    }
+    
+    // If we have a redirect URL, redirect to Stripe after a short delay
+    if (redirectUrl) {
+      setStripeUrl(redirectUrl);
       setStatus('pending');
       
-      // If we have a redirect URL, redirect to Stripe after a short delay
-      if (redirectUrl) {
-        setStripeUrl(redirectUrl);
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 2000); // 2 second delay to show the status page
-      }
+      // Start countdown timer
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            window.location.href = redirectUrl;
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Cleanup timer on unmount
+      return () => clearInterval(timer);
+    } else if (storedBookingId) {
+      // No redirect URL but we have a booking ID - show pending status
+      setStatus('pending');
     } else {
+      // No booking ID and no redirect URL - show failed status
       setStatus('failed');
     }
   }, []);
@@ -92,7 +110,7 @@ export default function PaymentStatusPage() {
                 </h3>
                 <p className="text-gray-600 text-sm">
                   {stripeUrl 
-                    ? 'You will be redirected to complete your payment in a moment.'
+                    ? `You will be redirected to complete your payment in ${countdown} seconds...`
                     : 'Your booking is being processed. Please complete your payment to confirm your reservation.'
                   }
                 </p>
@@ -100,6 +118,16 @@ export default function PaymentStatusPage() {
                   <p className="text-xs text-gray-500 mt-2">
                     Booking ID: {bookingId}
                   </p>
+                )}
+                {stripeUrl && (
+                  <div className="mt-3">
+                    <Button 
+                      onClick={() => window.location.href = stripeUrl}
+                      className="w-full bg-orange-500 hover:bg-orange-600"
+                    >
+                      Go to Payment Now
+                    </Button>
+                  </div>
                 )}
               </div>
               {!stripeUrl && (
