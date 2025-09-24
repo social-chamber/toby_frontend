@@ -70,7 +70,7 @@ export default function ConfirmDetails() {
 
         // Store booking ID in sessionStorage for success page
         if (data.data.bookingId) {
-          sessionStorage.setItem('pendingBookingId', data.data.bookingId);
+          sessionStorage.setItem("pendingBookingId", data.data.bookingId);
         }
 
         // Redirect to payment status page first, then to Stripe
@@ -118,10 +118,13 @@ export default function ConfirmDetails() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      console.log("Sending request to:", `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/booking`);
+      console.log(
+        "Sending request to:",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/booking`
+      );
       console.log("Request headers:", headers);
       console.log("Request body:", body);
-      
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/booking`,
         {
@@ -130,18 +133,21 @@ export default function ConfirmDetails() {
           body: JSON.stringify(body),
         }
       );
-      
+
       console.log("Response status:", response.status);
-      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
 
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         let responseText = "";
-        
+
         try {
           responseText = await response.text();
           console.error("Raw response text:", responseText);
-          
+
           if (responseText.trim()) {
             const errorData = JSON.parse(responseText);
             errorMessage = errorData.message || errorData.error || errorMessage;
@@ -153,7 +159,7 @@ export default function ConfirmDetails() {
         } catch (parseError) {
           console.error("Could not parse error response:", parseError);
           console.error("Response text was:", responseText);
-          errorMessage = `Server error (${response.status}): ${responseText || 'Empty response'}`;
+          errorMessage = `Server error (${response.status}): ${responseText || "Empty response"}`;
         }
         throw new Error(errorMessage);
       }
@@ -171,6 +177,7 @@ export default function ConfirmDetails() {
 
       // Conditional logic based on token
       if (!token) {
+        toast.success("Booking confirmed! Proceeding to payment...");
         paymentIntent(data.data._id); // Guests go to payment
       } else {
         toast.success("Manual booking completed successfully");
@@ -250,14 +257,14 @@ export default function ConfirmDetails() {
       toast.error("Room not selected");
       return;
     }
-    
+
     // Validate ObjectId format
     const objectIdRegex = /^[0-9a-fA-F]{24}$/;
     if (!objectIdRegex.test(service._id)) {
       toast.error("Invalid service ID format");
       return;
     }
-    
+
     if (!objectIdRegex.test(room._id)) {
       toast.error("Invalid room ID format");
       return;
@@ -273,16 +280,16 @@ export default function ConfirmDetails() {
       start: slot.start,
       end: slot.end,
     }));
-    
+
     console.log("Validated time slots:", validatedTimeSlots);
-    
+
     // Validate time slot format
     for (const slot of validatedTimeSlots) {
       if (!slot.start || !slot.end) {
         toast.error("Invalid time slot format");
         return;
       }
-      
+
       // Check if time format is HH:MM
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
       if (!timeRegex.test(slot.start) || !timeRegex.test(slot.end)) {
@@ -298,7 +305,7 @@ export default function ConfirmDetails() {
         email: data.email,
         phone: data.phone,
       },
-             date: format(selectedDate!, "yyyy-MM-dd"),
+      date: format(selectedDate!, "yyyy-MM-dd"),
       timeSlots: validatedTimeSlots,
       service: service._id,
       room: room._id,
@@ -311,23 +318,28 @@ export default function ConfirmDetails() {
     console.log("Service:", service);
     console.log("Room:", room);
     console.log("Category:", selectedCategoryName);
-    
+
     // Validate payload structure
-    if (!payload.user.firstName || !payload.user.lastName || !payload.user.email || !payload.user.phone) {
+    if (
+      !payload.user.firstName ||
+      !payload.user.lastName ||
+      !payload.user.email ||
+      !payload.user.phone
+    ) {
       toast.error("Please fill in all required user information");
       return;
     }
-    
+
     if (!payload.date) {
       toast.error("Date is required");
       return;
     }
-    
+
     if (!payload.timeSlots || payload.timeSlots.length === 0) {
       toast.error("Time slots are required");
       return;
     }
-    
+
     if (!payload.service || !payload.room) {
       toast.error("Service and room are required");
       return;
@@ -537,9 +549,7 @@ export default function ConfirmDetails() {
 
           <div className="border-t pt-4 mt-6 flex justify-between items-center">
             <span className="font-medium">Total for booking:</span>
-            <span className="text-xl font-bold">
-              {formatPrice(totalPrice)}
-            </span>
+            <span className="text-xl font-bold">{formatPrice(totalPrice)}</span>
           </div>
         </div>
       </div>
