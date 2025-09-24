@@ -4,13 +4,14 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 interface Props {
   bookingId: string;
 }
 export default function BookingConfirmation({ bookingId }: Props) {
-  const { data } = useQuery({
-    queryKey: ["blog"],
+  const { data, refetch } = useQuery({
+    queryKey: ["booking", bookingId],
     queryFn: async () => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payment/booking/${bookingId}`,
@@ -28,6 +29,46 @@ export default function BookingConfirmation({ bookingId }: Props) {
       return res.json();
     },
   });
+
+  // Backup confirmation mechanism - if booking is still pending, try to confirm it
+  useEffect(() => {
+    const confirmBookingIfPending = async () => {
+      if (data?.data?.status === "pending") {
+        console.log(
+          "🔄 Booking is still pending, attempting backup confirmation..."
+        );
+
+        try {
+          const confirmRes = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/booking/${bookingId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "confirmed" }),
+            }
+          );
+
+          if (confirmRes.ok) {
+            console.log("✅ Backup confirmation successful");
+            refetch(); // Refresh the booking data
+          } else {
+            console.log(
+              "⚠️ Backup confirmation failed, but webhook should handle it"
+            );
+          }
+        } catch (error) {
+          console.log("⚠️ Backup confirmation error:", error);
+        }
+      }
+    };
+
+    // Only run if we have data and booking is pending
+    if (data?.data) {
+      confirmBookingIfPending();
+    }
+  }, [data, bookingId, refetch]);
 
   const successData = data?.data || [];
   // console.log(successData);

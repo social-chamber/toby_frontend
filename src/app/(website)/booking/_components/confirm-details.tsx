@@ -49,7 +49,7 @@ export default function ConfirmDetails() {
   const { mutate: paymentIntent, isPending: isPaymentIntentLoading } =
     useMutation({
       mutationKey: ["payment-intent"],
-      mutationFn: (bookingId: string) =>
+      mutationFn: (bookingData: any) =>
         fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/payment/payment-intent`,
           {
@@ -57,9 +57,7 @@ export default function ConfirmDetails() {
             headers: {
               "content-type": "application/json",
             },
-            body: JSON.stringify({
-              booking: bookingId,
-            }),
+            body: JSON.stringify(bookingData),
           }
         ).then((res) => res.json()),
       onSuccess: (data) => {
@@ -81,31 +79,7 @@ export default function ConfirmDetails() {
   const { data: session } = useSession();
   const token = (session?.user as { accessToken: string })?.accessToken;
 
-  // bokking
-  // const { isPending, mutate } = useMutation({
-  //   mutationKey: ["booking"],
-  //   mutationFn: (body: any) =>
-  //     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/booking`, {
-  //       method: "POST",
-  //       headers: {
-  //         "content-type": "application/json",
-  //       },
-  //       body: JSON.stringify(body),
-  //     }).then((res) => res.json()),
-  //   onSuccess: (data) => {
-  //     if (!data.status) {
-  //       toast.error(data.message);
-  //       return;
-  //     }
-  //     // call with booking id
-  //     paymentIntent(data.data._id);
-  //   },
-  //   onError: (err) => {
-  //     toast.error(err.message);
-  //   },
-  // });
-
-  // manual booking
+  // Manual booking for admin users
 
   const { isPending, mutate } = useMutation({
     mutationKey: ["booking"],
@@ -166,7 +140,7 @@ export default function ConfirmDetails() {
 
       return response.json();
     },
-    // onSuccess callback
+    // onSuccess callback (only for admin manual bookings)
     onSuccess: (data) => {
       if (!data.status) {
         toast.error(data.message);
@@ -174,15 +148,8 @@ export default function ConfirmDetails() {
       }
 
       form.reset(); // Reset the form after successful booking
-
-      // Conditional logic based on token
-      if (!token) {
-        toast.success("Booking confirmed! Proceeding to payment...");
-        paymentIntent(data.data._id); // Guests go to payment
-      } else {
-        toast.success("Manual booking completed successfully");
-        // setStep("success"); // Show success to admin
-      }
+      toast.success("Manual booking completed successfully");
+      // setStep("success"); // Show success to admin
     },
     onError: (err: any) => {
       console.error("Booking Error:", err);
@@ -291,7 +258,7 @@ export default function ConfirmDetails() {
       }
 
       // Check if time format is HH:MM
-      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      const timeRegex = /^([01]?\d|2[0-3]):[0-5]\d$/;
       if (!timeRegex.test(slot.start) || !timeRegex.test(slot.end)) {
         toast.error("Invalid time format. Expected HH:MM");
         return;
@@ -345,7 +312,13 @@ export default function ConfirmDetails() {
       return;
     }
 
-    mutate(payload);
+    // For guests: go directly to payment (booking will be created after payment)
+    // For admins: create booking immediately
+    if (!token) {
+      paymentIntent(payload);
+    } else {
+      mutate(payload); // Admin manual booking
+    }
   };
 
   return (
@@ -512,11 +485,11 @@ export default function ConfirmDetails() {
               className="w-full bg-orange-500 hover:bg-orange-600"
               disabled={isPending || isPaymentIntentLoading}
             >
-              {isPending
-                ? "Processing..."
-                : isPaymentIntentLoading
-                  ? "Generating your payment..."
-                  : "Book Now"}
+              {(() => {
+                if (isPending) return "Processing...";
+                if (isPaymentIntentLoading) return "Generating your payment...";
+                return token ? "Create Manual Booking" : "Proceed to Payment";
+              })()}
             </Button>
           </form>
         </Form>
@@ -555,29 +528,4 @@ export default function ConfirmDetails() {
       </div>
     </div>
   );
-}
-
-{
-  /*
-  
-  {
-    "user": {
-        "firstName": "Monir Hossain",
-        "lastName": "Rabby",
-        "email": "monir.bdcalling@gmail.com",
-        "phone": "01956306002"
-    },
-    "date": "2025-05-21T18:00:00.000Z",
-    "timeSlots": [
-        {
-            "start": "09:00",
-            "end": "10:00"
-        }
-    ],
-    "service": "6829bc2a8f11fa6517869230",
-    "room": "68296b5cfb46dd41e61a6024",
-    "promoCode": "",
-    "numberOfPeople": 3
-}
-  */
 }
