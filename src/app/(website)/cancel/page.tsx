@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, XCircle, AlertTriangle } from "lucide-react";
 
-export default function CancelPage() {
+function CancelPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -116,5 +116,19 @@ export default function CancelPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CancelPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      }
+    >
+      <CancelPageContent />
+    </Suspense>
   );
 }
