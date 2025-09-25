@@ -115,7 +115,10 @@ const SuccessPage = () => {
                 <span className="font-medium">Time:</span>
                 <span className="text-gray-600">
                   {booking?.timeSlots
-                    ?.map((slot) => `${slot.start} - ${slot.end}`)
+                    ?.map(
+                      (slot: { start: string; end: string }) =>
+                        `${slot.start} - ${slot.end}`
+                    )
                     .join(", ")}
                 </span>
               </div>
@@ -138,8 +141,8 @@ const SuccessPage = () => {
         <CardFooter className="px-6 py-4 flex flex-col items-center gap-4">
           <p className="text-sm text-gray-600 text-center">
             📬 Please check your email for the confirmation message and booking
-            details. If you don't see it, make sure to check your spam or junk
-            folder as well.
+            details. If you don&apos;t see it, make sure to check your spam or
+            junk folder as well.
           </p>
           <div className="flex gap-2 w-full">
             <Link href={"/"} className="flex-1">
