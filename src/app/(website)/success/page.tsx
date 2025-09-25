@@ -20,7 +20,11 @@ const SuccessPage = () => {
   }, []);
 
   // Fetch booking details if we have a booking ID
-  const { data: bookingData, isLoading } = useQuery({
+  const {
+    data: bookingData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["booking", bookingId],
     queryFn: async () => {
       if (!bookingId) return null;
@@ -31,6 +35,12 @@ const SuccessPage = () => {
       return res.json();
     },
     enabled: !!bookingId,
+    refetchInterval: (data) => {
+      // If booking is still pending, poll every 5 seconds
+      // If confirmed, stop polling
+      return data?.data?.status === "pending" ? 5000 : false;
+    },
+    refetchIntervalInBackground: true,
   });
 
   const booking = bookingData?.data;
@@ -40,15 +50,38 @@ const SuccessPage = () => {
       <Card className="w-full max-w-md mx-auto shadow-md">
         <CardContent className="pt-6 px-6 pb-0">
           <div className="flex flex-col items-center mb-6">
-            <div className="rounded-full bg-green-500 p-2 mb-2">
+            <div
+              className={`rounded-full p-2 mb-2 ${
+                booking?.status === "confirmed"
+                  ? "bg-green-500"
+                  : booking?.status === "pending"
+                    ? "bg-yellow-500"
+                    : "bg-gray-500"
+              }`}
+            >
               <CheckCircle className="h-6 w-6 text-white" />
             </div>
             <h2 className="text-xl font-semibold text-center">
-              Payment Successful!
+              {booking?.status === "confirmed"
+                ? "Payment Successful!"
+                : booking?.status === "pending"
+                  ? "Payment Received!"
+                  : "Payment Processing"}
             </h2>
-            <p className="text-center text-sm text-green-600 mt-1">
-              Your payment has been processed successfully. Your booking is now
-              confirmed!
+            <p
+              className={`text-center text-sm mt-1 ${
+                booking?.status === "confirmed"
+                  ? "text-green-600"
+                  : booking?.status === "pending"
+                    ? "text-yellow-600"
+                    : "text-gray-600"
+              }`}
+            >
+              {booking?.status === "confirmed"
+                ? "Your payment has been processed successfully. Your booking is now confirmed!"
+                : booking?.status === "pending"
+                  ? "Your payment has been received. We are processing your booking confirmation."
+                  : "Your payment is being processed. Please wait for confirmation."}
             </p>
           </div>
 
@@ -62,7 +95,21 @@ const SuccessPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between border-b pb-2">
                 <span className="font-medium">Status:</span>
-                <span className="text-green-600 font-semibold">Confirmed</span>
+                <span
+                  className={`font-semibold ${
+                    booking.status === "confirmed"
+                      ? "text-green-600"
+                      : booking.status === "pending"
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                  }`}
+                >
+                  {booking.status === "confirmed"
+                    ? "Confirmed"
+                    : booking.status === "pending"
+                      ? "Payment Processing..."
+                      : booking.status || "Unknown"}
+                </span>
               </div>
 
               <div className="flex justify-between border-b pb-2">
@@ -127,12 +174,14 @@ const SuccessPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between border-b pb-2">
                 <span className="font-medium">Status:</span>
-                <span className="text-green-600 font-semibold">Confirmed</span>
+                <span className="text-yellow-600 font-semibold">
+                  Payment Processing...
+                </span>
               </div>
 
               <div className="flex justify-between border-b pb-2">
                 <span className="font-medium">Next Steps:</span>
-                <span className="text-gray-600">Check your email</span>
+                <span className="text-gray-600">Waiting for confirmation</span>
               </div>
             </div>
           )}
@@ -140,9 +189,9 @@ const SuccessPage = () => {
 
         <CardFooter className="px-6 py-4 flex flex-col items-center gap-4">
           <p className="text-sm text-gray-600 text-center">
-            📬 Please check your email for the confirmation message and booking
-            details. If you don&apos;t see it, make sure to check your spam or
-            junk folder as well.
+            {booking?.status === "confirmed"
+              ? "📬 Please check your Gmail for the confirmation message and booking details. If you don&apos;t see it, make sure to check your spam or junk folder as well."
+              : "📬 We will send you further information through Gmail once your payment is processed and booking is confirmed."}
           </p>
           <div className="flex gap-2 w-full">
             <Link href={"/"} className="flex-1">
