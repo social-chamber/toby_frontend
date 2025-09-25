@@ -20,11 +20,7 @@ const SuccessPage = () => {
   }, []);
 
   // Fetch booking details if we have a booking ID
-  const {
-    data: bookingData,
-    isLoading,
-    refetch,
-  } = useQuery({
+  const { data: bookingData, isLoading } = useQuery({
     queryKey: ["booking", bookingId],
     queryFn: async () => {
       if (!bookingId) return null;
@@ -35,9 +31,10 @@ const SuccessPage = () => {
       return res.json();
     },
     enabled: !!bookingId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // If booking is still pending, poll every 5 seconds
       // If confirmed, stop polling
+      const data = query.state.data as any;
       return data?.data?.status === "pending" ? 5000 : false;
     },
     refetchIntervalInBackground: true,
